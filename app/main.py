@@ -141,13 +141,11 @@ async def delete_media_file(file_id: str, db: Session = Depends(get_db)):
     if not db_file:
         raise HTTPException(status_code=404, detail="Arquivo nao existe.")
 
-    # Delete from S3
     try:
         s3_client.delete_object(Bucket=BUCKET_NAME, Key=db_file.file_name)
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Falhou ao deletar no MinIO S3: {str(e)}")
 
-    # Delete from DB
     db.delete(db_file)
     db.commit()
 
