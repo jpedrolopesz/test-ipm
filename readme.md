@@ -47,7 +47,7 @@ ROTA MINIO
 localhost:9001/
 ```
 
-ROTA PGADMIN ( NAO FEZIA PARTE DAS EXIGENCIAS MAS ACABEI FAZER INTEGRAÇAO )
+ROTA PGADMIN ( Não fazia parte das exigências, mas acabei fazendo a integração )
 
 ```bash
 localhost:5050/
