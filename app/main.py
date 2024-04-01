@@ -133,6 +133,26 @@ async def update_media_file(file_id: str, file: UploadFile = File(...), db: Sess
 
 
 
+
+
+@app.delete("/delete/media_files/{file_id}")
+async def delete_media_file(file_id: str, db: Session = Depends(get_db)):
+    db_file = db.query(MediaFile).filter(MediaFile.file_id == file_id).first()
+    if not db_file:
+        raise HTTPException(status_code=404, detail="Arquivo nao existe.")
+
+    # Delete from S3
+    try:
+        s3_client.delete_object(Bucket=BUCKET_NAME, Key=db_file.file_name)
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Falhou ao deletar no MinIO S3: {str(e)}")
+
+    # Delete from DB
+    db.delete(db_file)
+    db.commit()
+
+    return {"detail": "Arquivo deletado com sucesso."}
+
 # ###################################################################
 
 
@@ -193,3 +213,20 @@ async def update_wayline_file(wayline_id: str, file: UploadFile = File(...), db:
     db.refresh(db_file)
 
     return {"filename": db_file.wayline_name, "wayline_id": db_file.wayline_id, "updated": True}
+
+
+@app.delete("/delete/wayline_files/{wayline_id}")
+async def delete_wayline_file(wayline_id: str, db: Session = Depends(get_db)):
+    db_file = db.query(WaylineFile).filter(WaylineFile.wayline_id == wayline_id).first()
+    if not db_file:
+        raise HTTPException(status_code=404, detail="Arquivo nao existe.")
+
+    try:
+        s3_client.delete_object(Bucket=BUCKET_NAME, Key=db_file.wayline_name)
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao deletar arquivo no minIO S3: {str(e)}")
+
+    db.delete(db_file)
+    db.commit()
+
+    return {"detail": "Arquivo deletado com successo."}
